@@ -23,26 +23,44 @@ pipeline {
         }
       }
     }
-    stage('Build and Push Docker Image') {
-      environment {
-        DOCKER_IMAGE = "nh6462/lab2:${BUILD_NUMBER}"
+    stage('Docker Build & Push') {
+        environment {
+        DOCKER_IMAGE_1 = "nh6462/lab2_be:${BUILD_NUMBER}"
+        DOCKER_IMAGE_2 = "nh6462/lab2_fe:${BUILD_NUMBER}"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
-      }
-      steps {
-        script {
-            sh 'docker build -t ${DOCKER_IMAGE} .'
-            def dockerImage = docker.image("${DOCKER_IMAGE}")
-            docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
-                dockerImage.push()
+            }
+            parallel {
+                stage('Docker Build for  be') {
+                    steps {
+                        script {
+                            sh 'cd deploywithk8s/backend &&  docker build -t ${DOCKER_IMAGE_1} .'
+                            def dockerImage = docker.image("${DOCKER_IMAGE_1}")
+                            docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+                                dockerImage.push()
+                                echo "Pushed image: ${DOCKER_IMAGE_1} successfully!"
+                                }
+                            }
+                        }
+                    }
+                stage('Docker Build fe') {
+                    steps {
+                        script {
+                            sh 'cd deploywithk8s/frontend &&  docker build -t ${DOCKER_IMAGE_2} .'
+                            def dockerImage = docker.image("${DOCKER_IMAGE_2}")
+                            docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+                                dockerImage.push()
+                                 echo "Pushed image: ${DOCKER_IMAGE_2} successfully!"
+                                }
+                            }
+                        }
+                    }
             }
         }
-      }
-    }
     stage('Deploy') {
         steps {
             echo 'Deploying....'
-            sh 'minikube kubectl -- apply -f deployment.yaml'
-            sh 'minikube kubectl -- apply -f service.yaml'
+            sh 'kubectl apply -f k8s/backend-deployment.yaml'
+            sh 'kubectl apply -f k8s/frontend-deployment.yaml'
             }
         }
   }

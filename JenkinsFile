@@ -4,6 +4,7 @@ pipeline {
     stage('Checkout') {
       steps {
         sh 'echo passed 1'
+        checkout scm
       }
     }
 

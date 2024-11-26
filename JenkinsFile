@@ -4,13 +4,13 @@ pipeline {
     stage('Checkout') {
       steps {
         sh 'echo passed 1'
-        checkout scm
+        checkout  https://github.com/ellie21520813/deploywithk8s
       }
     }
 
     stage('Static Code Analysis') {
         environment {
-            SONAR_URL = "http:98.84.150.86//:9000"
+            SONAR_URL = "http:http://3.84.226.203/:9000"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {

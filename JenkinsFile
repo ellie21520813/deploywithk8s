@@ -7,10 +7,11 @@ pipeline {
         git url:'  https://github.com/ellie21520813/deploywithk8s', branch:'main'
       }
     }
+    
 
     stage('Static Code Analysis') {
         environment {
-            SONAR_URL = "http:http://3.84.226.203/:9000"
+            SONAR_URL = "http://3.84.226.203:9000"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
@@ -66,3 +67,16 @@ pipeline {
         }
   }
 }
+
+
+ stage('Deploy k8s') {
+        steps {
+            script {
+    			kubeconfig(credentialsId: 'k8server', serverUrl: 'https://192.168.49.2:8443') {
+                     echo 'Deploying....'
+                        sh 'kubectl apply -f k8s/backend-deployment.yaml'
+                        sh 'kubectl apply -f k8s/frontend-deployment.yaml'
+                }
+            }
+        }
+    }
